@@ -23,8 +23,9 @@ class LabelHandler implements HandlerInterface
     public function configure(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
-            LabelExtension::NAME          => true,
-            LabelExtension::NAME.'_trans' => Trans::disable(),
+            LabelExtension::NAME              => true,
+            LabelExtension::NAME.'_trans'     => Trans::disable(),
+            LabelExtension::NAME.'_formatter' => true,
         ));
     }
 
@@ -34,8 +35,13 @@ class LabelHandler implements HandlerInterface
     public function handle(Column $column, Entity $entity = null, array $options = array())
     {
         $subject = is_string($options[LabelExtension::NAME]) ? $options[LabelExtension::NAME] : $column->getName();
-
-        return new Cell($this->getLabel($subject, $column->getGrid()->getName(), $options[LabelExtension::NAME.'_trans']));
+        $label = $this->getLabel(
+            $subject,
+            $column->getGrid()->getName(),
+            $options[LabelExtension::NAME.'_trans'],
+            $options[LabelExtension::NAME.'_formatter']
+        );
+        return new Cell($label);
     }
 
     /**
@@ -49,11 +55,12 @@ class LabelHandler implements HandlerInterface
     /**
      * @param string $subject
      * @param string $grid
-     * @param Trans  $trans
+     * @param Trans $trans
+     * @param bool $useFormatter
      *
      * @return Label
      */
-    private function getLabel($subject, $grid, Trans $trans)
+    private function getLabel($subject, $grid, Trans $trans, $useFormatter)
     {
         if ($trans->isEnabled()) {
             $label = $trans->resolvePattern(array(
@@ -67,6 +74,6 @@ class LabelHandler implements HandlerInterface
 
         $formatter = new LabelFormatter();
 
-        return new Label($formatter->format($subject));
+        return new Label($useFormatter ? $formatter->format($subject) : $subject);
     }
 }
